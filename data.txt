@@ -1,5 +1,0 @@
-username: shlok
-
-password: IgQ4HXKSniRNcjB7
-
-link: mongodb+srv://shlok:IgQ4HXKSniRNcjB7@cluster0.15vfnwi.mongodb.net/?appName=Cluster0
