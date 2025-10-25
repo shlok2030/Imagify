@@ -29,7 +29,7 @@ const onSubmitHandler = async (e) => {
 
         if (credit < 1) {
             toast.error('Insufficient credits');
-            navigate('/buy-credits');
+            navigate('/buy');
             return;
         }
 
