@@ -7,7 +7,13 @@ export const registerUser = async (req, res) => {
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+
+        // check if user already exists
+        const existing = await userModel.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "User with this email already exists" });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -24,10 +30,14 @@ export const registerUser = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
         
-        res.json({success: true, token, user: {  name: user.name } });
+        res.json({success: true, token, user: { name: user.name } });
     } catch (error) {
-        console.log(error);
-        res.json({ message: "Error registering user" });
+        console.error('registerUser error:', error);
+        // Handle duplicate key explicitly just in case
+        if (error.code === 11000) {
+            return res.status(400).json({ success: false, message: 'Email already in use' });
+        }
+        return res.status(500).json({ success: false, message: "Error registering user", error: error.message });
     }
 
 };
@@ -59,7 +69,6 @@ export const loginUser = async (req, res) => {
 
 }; 
 
-// ...existing code...
 export const userCredits = async (req, res) => {
   try {
     // try multiple sources for userId
@@ -95,4 +104,3 @@ export const userCredits = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Error fetching user credits' });
   }
 };
-// ...existing code...

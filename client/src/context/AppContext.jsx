@@ -19,11 +19,13 @@ const AppContextProvider = (props)=>{
     const loadCreditsData = async ()=>{
         try {
             const {data} = await axios.get(`${backendUrl}/api/users/credits`,
-                 {headers: {token}});
+                 {headers: {Authorization: `Bearer ${token}`}});
             
                  if(data.success){
                     setCredit(data.credits);
                     setUser(data.user);
+                 } else {
+                    console.log('Credits API responded:', data);
                  }
         } catch (error) {
             console.log(error);
@@ -32,18 +34,32 @@ const AppContextProvider = (props)=>{
     }
 
     const generateImage = async (prompt) => {
+
+        if (!token) {
+            toast.error('Please login first');
+            return null;
+        }
+
+
         try {
-            await axios.post(`${backendUrl}/api/image/generate-image`, {prompt}, {headers: {token}});
+            const { data } = await axios.post(`${backendUrl}/api/image/generate-image`, { prompt }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
 
             if(data.success){
-                loadCreditsData();
-                return data.resultImage;
-                if(data.creditBalance === 0){
-                    navigate('/buy-credits');
-                }
-            }
+                await loadCreditsData();
+                return data.imageurl || data.resultImage;
+            } 
+            return {
+                success: false,
+                creditBalance: data.creditBalance,
+                message: data.message || 'Generation failed'
+            };
         } catch (error) {
-            toast.error(error.message);
+            console.error('generateImage error:', error.response?.data || error.message);
+            toast.error(error.response?.data?.message || error.message);
+            return { success: false, message: error.message || 'Something went wrong' };
         }
     }
 
